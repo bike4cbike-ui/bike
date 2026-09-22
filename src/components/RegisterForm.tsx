@@ -86,6 +86,7 @@ export default function RegisterForm() {
           model: formData.get("model"),
           color: formData.get("color"),
           serialNumber: formData.get("serialNumber"),
+          status: formData.get("status"),
           notes: formData.get("notes"),
           imageUrl,
         }),
@@ -131,6 +132,23 @@ export default function RegisterForm() {
         placeholder="Usually stamped on the frame"
         required
       />
+
+      <div>
+        <label htmlFor="status" className="mb-1.5 block text-sm font-medium">
+          Status <span className="text-danger">*</span>
+        </label>
+        <select
+          id="status"
+          name="status"
+          required
+          defaultValue="registered"
+          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
+        >
+          <option value="registered">Registered</option>
+          <option value="pending">Pending</option>
+          <option value="reported">Reported</option>
+        </select>
+      </div>
 
       <div>
         <label htmlFor="photo" className="mb-1.5 block text-sm font-medium">

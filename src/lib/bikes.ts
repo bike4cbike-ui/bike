@@ -1,5 +1,18 @@
 export type BikeStatus = "registered" | "pending" | "reported";
 
+export const BIKE_STATUSES: BikeStatus[] = [
+  "registered",
+  "pending",
+  "reported",
+];
+
+export function isBikeStatus(value: unknown): value is BikeStatus {
+  return (
+    typeof value === "string" &&
+    (BIKE_STATUSES as string[]).includes(value)
+  );
+}
+
 export type BikeDocument = {
   userId: string;
   brand: string;
@@ -20,4 +33,5 @@ export type CreateBikeInput = {
   serialNumber: string;
   notes?: string;
   imageUrl?: string | null;
+  status?: BikeStatus;
 };

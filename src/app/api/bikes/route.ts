@@ -1,6 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import type { BikeDocument, CreateBikeInput } from "@/lib/bikes";
+import {
+  isBikeStatus,
+  type BikeDocument,
+  type BikeStatus,
+  type CreateBikeInput,
+} from "@/lib/bikes";
 import { getDb } from "@/lib/mongodb";
 
 function trimRequired(value: unknown, field: string): string {
@@ -36,6 +41,7 @@ export async function POST(request: Request) {
   let color: string;
   let notes: string;
   let imageUrl: string | null;
+  let bikeStatus: BikeStatus;
 
   try {
     brand = trimRequired(body.brand, "Brand");
@@ -47,6 +53,14 @@ export async function POST(request: Request) {
       typeof body.imageUrl === "string" && body.imageUrl.trim()
         ? body.imageUrl.trim()
         : null;
+
+    if (body.status === undefined || body.status === null) {
+      bikeStatus = "registered";
+    } else if (isBikeStatus(body.status)) {
+      bikeStatus = body.status;
+    } else {
+      throw new Error("Status must be registered, pending, or reported.");
+    }
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Invalid input." },
@@ -63,7 +77,7 @@ export async function POST(request: Request) {
     serialNumber,
     notes,
     imageUrl,
-    status: "registered",
+    status: bikeStatus,
     createdAt: now,
     updatedAt: now,
   };
