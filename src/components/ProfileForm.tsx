@@ -109,7 +109,7 @@ export default function ProfileForm({ initialUser }: ProfileFormProps) {
   }
 
   return (
-    <div className="max-w-lg space-y-4">
+    <div className="space-y-4">
       <div className="rounded-lg border border-border bg-surface p-6">
         <div className="mb-6 flex items-center gap-4">
           {user.imageUrl ? (

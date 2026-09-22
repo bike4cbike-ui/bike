@@ -1,6 +1,7 @@
 import { SignInButton, Show } from "@clerk/nextjs";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
+import CertificatePanel from "@/components/CertificatePanel";
 import PageHeader from "@/components/PageHeader";
 import ProfileForm from "@/components/ProfileForm";
 import {
@@ -75,7 +76,10 @@ export default async function ProfilePage() {
 
       <Show when="signed-in">
         {initialUser ? (
-          <ProfileForm initialUser={initialUser} />
+          <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+            <ProfileForm initialUser={initialUser} />
+            <CertificatePanel ownerName={initialUser.name} />
+          </div>
         ) : (
           <div className="max-w-lg rounded-lg border border-border bg-surface p-6">
             <p className="text-sm text-muted">
