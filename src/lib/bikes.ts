@@ -39,6 +39,15 @@ export type CreateBikeInput = {
   status?: BikeStatus;
 };
 
+export type UpdateBikeInput = {
+  brand?: string;
+  model?: string;
+  color?: string;
+  serialNumber?: string;
+  notes?: string;
+  status?: BikeStatus;
+};
+
 export type BikeListItem = {
   id: string;
   brand: string;
@@ -87,4 +96,49 @@ export async function getBikesByIds(bikeIds: string[]): Promise<BikeListItem[]> 
   return validIds
     .map((id) => byId.get(id))
     .filter((bike): bike is BikeListItem => bike != null);
+}
+
+export async function updateBikeForUser(
+  bikeId: string,
+  ownerClerkId: string,
+  updates: UpdateBikeInput,
+): Promise<BikeListItem | null> {
+  if (!ObjectId.isValid(bikeId)) return null;
+
+  const $set: Record<string, string | Date> = {
+    updatedAt: new Date(),
+  };
+
+  if (updates.brand !== undefined) $set.brand = updates.brand.trim();
+  if (updates.model !== undefined) $set.model = updates.model.trim();
+  if (updates.color !== undefined) $set.color = updates.color.trim();
+  if (updates.serialNumber !== undefined) {
+    $set.serialNumber = updates.serialNumber.trim();
+  }
+  if (updates.notes !== undefined) $set.notes = updates.notes.trim();
+  if (updates.status !== undefined) $set.status = updates.status;
+
+  const db = await getDb();
+  const result = await db.collection<BikeDocument>("bikes").findOneAndUpdate(
+    { _id: new ObjectId(bikeId), userId: ownerClerkId },
+    { $set },
+    { returnDocument: "after" },
+  );
+
+  if (!result) return null;
+
+  return {
+    id: result._id.toString(),
+    brand: result.brand,
+    model: result.model,
+    color: result.color,
+    serialNumber: result.serialNumber,
+    notes: result.notes ?? "",
+    imageUrl: result.imageUrl,
+    status: result.status,
+    createdAt:
+      result.createdAt instanceof Date
+        ? result.createdAt.toISOString()
+        : String(result.createdAt),
+  };
 }

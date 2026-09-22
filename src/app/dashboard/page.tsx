@@ -2,12 +2,10 @@ import { SignInButton, Show } from "@clerk/nextjs";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
 import Link from "next/link";
+import DashboardBikesTable from "@/components/DashboardBikesTable";
 import PageHeader from "@/components/PageHeader";
 import { getBikesByIds, type BikeListItem } from "@/lib/bikes";
-import {
-  ensureUser,
-  getUserByClerkId,
-} from "@/lib/users";
+import { ensureUser, getUserByClerkId } from "@/lib/users";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -104,49 +102,7 @@ export default async function DashboardPage() {
             to see it here.
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-border bg-surface">
-            <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-border bg-accent-soft text-muted">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Bike</th>
-                  <th className="px-4 py-3 font-medium">Serial</th>
-                  <th className="px-4 py-3 font-medium">Registered</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Certificate</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bikes.map((bike) => (
-                  <tr
-                    key={bike.id}
-                    className="border-b border-border last:border-0"
-                  >
-                    <td className="px-4 py-3">
-                      {bike.brand} {bike.model}
-                      <span className="block text-xs text-muted">
-                        {bike.color || "No color"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs">
-                      {bike.serialNumber}
-                    </td>
-                    <td className="px-4 py-3">{formatDate(bike.createdAt)}</td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={bike.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/certificate/${bike.id}`}
-                        className="text-accent hover:underline"
-                      >
-                        View
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DashboardBikesTable initialBikes={bikes} />
         )}
       </Show>
     </div>
@@ -160,30 +116,4 @@ function Stat({ label, value }: { label: string; value: number }) {
       <p className="mt-1 text-3xl font-semibold tracking-tight">{value}</p>
     </div>
   );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    registered: "bg-accent-soft text-accent",
-    pending: "bg-yellow-50 text-[var(--warning)]",
-    reported: "bg-red-50 text-danger",
-  };
-
-  return (
-    <span
-      className={`inline-block rounded px-2 py-0.5 text-xs font-medium capitalize ${styles[status] ?? "bg-accent-soft"}`}
-    >
-      {status}
-    </span>
-  );
-}
-
-function formatDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
 }
