@@ -1,18 +1,76 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PublicUser } from "@/lib/users";
 
 type ProfileFormProps = {
   initialUser: PublicUser;
 };
 
+type BikeSummary = {
+  id: string;
+  brand: string;
+  model: string;
+  color: string;
+  serialNumber: string;
+  status: string;
+  imageUrl: string | null;
+  createdAt: string;
+};
+
 export default function ProfileForm({ initialUser }: ProfileFormProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const [user, setUser] = useState(initialUser);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [bikes, setBikes] = useState<BikeSummary[]>([]);
+  const [bikesLoading, setBikesLoading] = useState(false);
+  const [bikesError, setBikesError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    function onClose() {
+      setBikesError(null);
+    }
+
+    dialog.addEventListener("close", onClose);
+    return () => dialog.removeEventListener("close", onClose);
+  }, []);
+
+  async function openBikesDialog() {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    setBikesError(null);
+    setBikesLoading(true);
+    dialog.showModal();
+
+    try {
+      const response = await fetch("/api/bikes");
+      const data = (await response.json()) as BikeSummary[] | { error?: string };
+
+      if (!response.ok || !Array.isArray(data)) {
+        setBikes([]);
+        setBikesError(
+          !Array.isArray(data) && data.error
+            ? data.error
+            : "Could not load bicycles.",
+        );
+        return;
+      }
+
+      setBikes(data);
+    } catch {
+      setBikes([]);
+      setBikesError("Could not load bicycles. Check your connection.");
+    } finally {
+      setBikesLoading(false);
+    }
+  }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -30,8 +88,6 @@ export default function ProfileForm({ initialUser }: ProfileFormProps) {
           name: formData.get("name"),
           email: formData.get("email"),
           phone: formData.get("phone"),
-          studentId: formData.get("studentId"),
-          campus: formData.get("campus"),
         }),
       });
 
@@ -82,13 +138,21 @@ export default function ProfileForm({ initialUser }: ProfileFormProps) {
               <ReadField label="Name" value={user.name} />
               <ReadField label="Email" value={user.email} />
               <ReadField label="Phone" value={user.phone} />
-              <ReadField label="Student ID" value={user.studentId} />
-              <ReadField label="Campus" value={user.campus} />
               <ReadField label="User ID" value={user.userId} mono />
-              <ReadField
-                label="Bikes linked"
-                value={String(user.bikes.length)}
-              />
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-muted">
+                  Bikes
+                </dt>
+                <dd className="mt-2">
+                  <button
+                    type="button"
+                    onClick={openBikesDialog}
+                    className="rounded-md border border-accent px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent-soft"
+                  >
+                    View bikes ({user.bikes.length})
+                  </button>
+                </dd>
+              </div>
               <ReadField
                 label="Shops linked"
                 value={String(user.shop.length)}
@@ -125,16 +189,6 @@ export default function ProfileForm({ initialUser }: ProfileFormProps) {
               name="phone"
               defaultValue={user.phone ?? ""}
             />
-            <EditField
-              label="Student ID"
-              name="studentId"
-              defaultValue={user.studentId ?? ""}
-            />
-            <EditField
-              label="Campus"
-              name="campus"
-              defaultValue={user.campus ?? ""}
-            />
 
             <div className="flex flex-wrap gap-3 pt-2">
               <button
@@ -162,6 +216,69 @@ export default function ProfileForm({ initialUser }: ProfileFormProps) {
 
       {message ? <p className="text-sm text-muted">{message}</p> : null}
       {error ? <p className="text-sm text-danger">{error}</p> : null}
+
+      <dialog
+        ref={dialogRef}
+        className="fixed left-1/2 top-1/2 z-50 m-0 w-[min(calc(100%-2rem),28rem)] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-surface p-0 text-foreground shadow-lg backdrop:bg-black/40"
+      >
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <h2 className="text-base font-medium">Your bikes</h2>
+          <button
+            type="button"
+            onClick={() => dialogRef.current?.close()}
+            className="rounded-md px-2 py-1 text-sm text-muted hover:bg-accent-soft hover:text-foreground"
+          >
+            Close
+          </button>
+        </div>
+
+        <div className="max-h-80 overflow-y-auto p-4">
+          {bikesLoading ? (
+            <p className="text-sm text-muted">Loading bikes…</p>
+          ) : null}
+
+          {!bikesLoading && bikesError ? (
+            <p className="text-sm text-danger">{bikesError}</p>
+          ) : null}
+
+          {!bikesLoading && !bikesError && bikes.length === 0 ? (
+            <p className="text-sm text-muted">No bikes registered yet.</p>
+          ) : null}
+
+          {!bikesLoading && !bikesError && bikes.length > 0 ? (
+            <ul className="space-y-3">
+              {bikes.map((bike) => (
+                <li
+                  key={bike.id}
+                  className="rounded-md border border-border p-3"
+                >
+                  <div className="flex gap-3">
+                    {bike.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={bike.imageUrl}
+                        alt=""
+                        className="h-14 w-14 rounded object-cover"
+                      />
+                    ) : null}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium">
+                        {bike.brand} {bike.model}
+                      </p>
+                      <p className="text-sm text-muted">
+                        {bike.color || "No color"} · {bike.serialNumber}
+                      </p>
+                      <p className="mt-1 text-xs capitalize text-accent">
+                        {bike.status}
+                      </p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      </dialog>
     </div>
   );
 }

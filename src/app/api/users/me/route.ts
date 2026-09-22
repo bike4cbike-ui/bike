@@ -64,8 +64,6 @@ export async function PATCH(request: Request) {
   if ("name" in body) updates.name = asOptionalString(body.name);
   if ("email" in body) updates.email = asOptionalString(body.email);
   if ("phone" in body) updates.phone = asOptionalString(body.phone);
-  if ("studentId" in body) updates.studentId = asOptionalString(body.studentId);
-  if ("campus" in body) updates.campus = asOptionalString(body.campus);
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json(

@@ -31,8 +31,6 @@ export type UserProfileUpdate = {
   name?: string | null;
   email?: string | null;
   phone?: string | null;
-  studentId?: string | null;
-  campus?: string | null;
 };
 
 export type PublicUser = {
@@ -45,8 +43,6 @@ export type PublicUser = {
   name: string | null;
   imageUrl: string | null;
   phone: string | null;
-  studentId: string | null;
-  campus: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -62,8 +58,6 @@ export function toPublicUser(user: UserDocument): PublicUser {
     name: user.name ?? null,
     imageUrl: user.imageUrl ?? null,
     phone: user.phone ?? null,
-    studentId: user.studentId ?? null,
-    campus: user.campus ?? null,
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),
   };
@@ -135,10 +129,6 @@ export async function updateUserProfile(
   if ("name" in updates) $set.name = normalizeOptional(updates.name);
   if ("email" in updates) $set.email = normalizeOptional(updates.email);
   if ("phone" in updates) $set.phone = normalizeOptional(updates.phone);
-  if ("studentId" in updates) {
-    $set.studentId = normalizeOptional(updates.studentId);
-  }
-  if ("campus" in updates) $set.campus = normalizeOptional(updates.campus);
 
   const result = await users.findOneAndUpdate(
     { clerkId },
