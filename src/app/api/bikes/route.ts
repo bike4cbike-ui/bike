@@ -7,6 +7,8 @@ import {
   type CreateBikeInput,
 } from "@/lib/bikes";
 import { getDb } from "@/lib/mongodb";
+import { addBikeToUser } from "@/lib/users";
+
 
 function trimRequired(value: unknown, field: string): string {
   if (typeof value !== "string" || !value.trim()) {
@@ -85,6 +87,7 @@ export async function POST(request: Request) {
   try {
     const db = await getDb();
     const result = await db.collection<BikeDocument>("bikes").insertOne(bike);
+    await addBikeToUser(userId, result.insertedId);
 
     return NextResponse.json(
       {
