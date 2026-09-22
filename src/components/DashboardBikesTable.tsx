@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import TransferBikeButton from "@/components/TransferBikeButton";
 import type { BikeListItem } from "@/lib/bikes";
 
 type DashboardBikesTableProps = {
@@ -116,13 +117,25 @@ export default function DashboardBikesTable({
                   </Link>
                 </td>
                 <td className="px-4 py-3">
-                  <button
-                    type="button"
-                    onClick={() => openEdit(bike)}
-                    className="rounded-md border border-border px-2.5 py-1 text-xs font-medium hover:bg-accent-soft"
-                  >
-                    Edit
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openEdit(bike)}
+                      className="rounded-md border border-border px-2.5 py-1 text-xs font-medium hover:bg-accent-soft"
+                    >
+                      Edit
+                    </button>
+                    <TransferBikeButton
+                      bikeId={bike.id}
+                      bikeLabel={`${bike.brand} ${bike.model}`}
+                      onTransferred={() => {
+                        setBikes((current) =>
+                          current.filter((item) => item.id !== bike.id),
+                        );
+                        router.refresh();
+                      }}
+                    />
+                  </div>
                 </td>
               </tr>
             ))}
