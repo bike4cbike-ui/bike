@@ -1,5 +1,7 @@
+import { SignInButton, Show } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import PageHeader from "@/components/PageHeader";
+import RegisterForm from "@/components/RegisterForm";
 
 export const metadata: Metadata = {
   title: "Register",
@@ -10,70 +12,28 @@ export default function RegisterPage() {
     <div>
       <PageHeader
         title="Register a bicycle"
-        description="Fill in the form below. This is UI-only for now — connect it to an API or database later."
+        description="Add bike details and an optional photo. Sign in to continue."
       />
 
-      <form className="max-w-xl space-y-5 rounded-lg border border-border bg-surface p-6">
-        <Field label="Brand" name="brand" placeholder="e.g. Giant" required />
-        <Field label="Model" name="model" placeholder="e.g. Escape 3" required />
-        <Field label="Color" name="color" placeholder="e.g. Black" />
-        <Field
-          label="Serial number"
-          name="serialNumber"
-          placeholder="Usually stamped on the frame"
-          required
-        />
-        <div>
-          <label htmlFor="notes" className="mb-1.5 block text-sm font-medium">
-            Notes
-          </label>
-          <textarea
-            id="notes"
-            name="notes"
-            rows={3}
-            placeholder="Optional details (lock type, distinguishing marks…)"
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
-          />
+      <Show when="signed-in">
+        <RegisterForm />
+      </Show>
+
+      <Show when="signed-out">
+        <div className="max-w-xl rounded-lg border border-border bg-surface p-6">
+          <p className="text-sm text-muted">
+            You need to be signed in to register a bicycle.
+          </p>
+          <SignInButton mode="modal">
+            <button
+              type="button"
+              className="mt-4 rounded-md border border-accent px-4 py-2.5 text-sm font-medium text-accent hover:bg-accent-soft"
+            >
+              Sign in
+            </button>
+          </SignInButton>
         </div>
-        <button
-          type="submit"
-          className="rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-hover"
-        >
-          Submit registration
-        </button>
-        <p className="text-xs text-muted">
-          TODO: prevent default submit and save to your backend.
-        </p>
-      </form>
-    </div>
-  );
-}
-
-function Field({
-  label,
-  name,
-  placeholder,
-  required,
-}: {
-  label: string;
-  name: string;
-  placeholder?: string;
-  required?: boolean;
-}) {
-  return (
-    <div>
-      <label htmlFor={name} className="mb-1.5 block text-sm font-medium">
-        {label}
-        {required ? <span className="text-danger"> *</span> : null}
-      </label>
-      <input
-        id={name}
-        name={name}
-        type="text"
-        required={required}
-        placeholder={placeholder}
-        className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
-      />
+      </Show>
     </div>
   );
 }
