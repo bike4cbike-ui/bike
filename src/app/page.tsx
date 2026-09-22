@@ -41,7 +41,7 @@ export default function HomePage() {
           {
             title: "Track",
             body: "See status for registered, pending, or reported bikes.",
-            href: "/bikes",
+            href: "/shopbikes",
           },
           {
             title: "Profile",

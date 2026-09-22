@@ -4,7 +4,7 @@ import Link from "next/link";
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/bikes", label: "My Bikes" },
+  { href: "/shopbikes", label: "Bike Shop" },
   { href: "/register", label: "Register" },
   { href: "/profile", label: "Profile" },
   { href: "/about", label: "About" },
