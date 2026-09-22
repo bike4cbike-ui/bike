@@ -68,6 +68,7 @@ export async function getUsersCollection() {
   const users = db.collection<UserDocument>("users");
   await users.createIndex({ clerkId: 1 }, { unique: true });
   await users.createIndex({ userId: 1 }, { unique: true });
+  await users.createIndex({ email: 1 });
   return users;
 }
 
@@ -76,6 +77,22 @@ export async function getUserByClerkId(
 ): Promise<UserDocument | null> {
   const users = await getUsersCollection();
   return users.findOne({ clerkId });
+}
+
+export async function getUserByEmail(
+  email: string,
+): Promise<UserDocument | null> {
+  const users = await getUsersCollection();
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return null;
+
+  return users.findOne({
+    email: { $regex: `^${escapeRegex(normalized)}$`, $options: "i" },
+  });
+}
+
+function escapeRegex(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /** Create the Mongo user on first sign-in/sign-up; no-op if they already exist. */
@@ -156,6 +173,22 @@ export async function addBikeToUser(
     { clerkId },
     {
       $addToSet: { bikes: id },
+      $set: { updatedAt: new Date() },
+    },
+  );
+}
+
+export async function removeBikeFromUser(
+  clerkId: string,
+  bikeId: string | ObjectId,
+): Promise<void> {
+  const users = await getUsersCollection();
+  const id = typeof bikeId === "string" ? bikeId : bikeId.toString();
+
+  await users.updateOne(
+    { clerkId },
+    {
+      $pull: { bikes: id },
       $set: { updatedAt: new Date() },
     },
   );

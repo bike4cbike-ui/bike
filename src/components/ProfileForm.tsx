@@ -1,6 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import TransferBikeButton from "@/components/TransferBikeButton";
 import type { PublicUser } from "@/lib/users";
 
 type ProfileFormProps = {
@@ -19,6 +21,7 @@ type BikeSummary = {
 };
 
 export default function ProfileForm({ initialUser }: ProfileFormProps) {
+  const router = useRouter();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [user, setUser] = useState(initialUser);
   const [editing, setEditing] = useState(false);
@@ -271,6 +274,24 @@ export default function ProfileForm({ initialUser }: ProfileFormProps) {
                       <p className="mt-1 text-xs capitalize text-accent">
                         {bike.status}
                       </p>
+                      <div className="mt-2">
+                        <TransferBikeButton
+                          bikeId={bike.id}
+                          bikeLabel={`${bike.brand} ${bike.model}`}
+                          onTransferred={() => {
+                            setBikes((current) =>
+                              current.filter((item) => item.id !== bike.id),
+                            );
+                            setUser((current) => ({
+                              ...current,
+                              bikes: current.bikes.filter(
+                                (id) => id !== bike.id,
+                              ),
+                            }));
+                            router.refresh();
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </li>

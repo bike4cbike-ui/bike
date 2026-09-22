@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
+import { addBikeToUser, removeBikeFromUser } from "@/lib/users";
 
 export type BikeStatus = "registered" | "pending" | "reported";
 
@@ -126,6 +127,54 @@ export async function updateBikeForUser(
   );
 
   if (!result) return null;
+
+  return {
+    id: result._id.toString(),
+    brand: result.brand,
+    model: result.model,
+    color: result.color,
+    serialNumber: result.serialNumber,
+    notes: result.notes ?? "",
+    imageUrl: result.imageUrl,
+    status: result.status,
+    createdAt:
+      result.createdAt instanceof Date
+        ? result.createdAt.toISOString()
+        : String(result.createdAt),
+  };
+}
+
+export async function transferBikeOwnership(options: {
+  bikeId: string;
+  fromClerkId: string;
+  toClerkId: string;
+}): Promise<BikeListItem | null> {
+  const { bikeId, fromClerkId, toClerkId } = options;
+  if (!ObjectId.isValid(bikeId)) return null;
+  if (fromClerkId === toClerkId) return null;
+
+  const db = await getDb();
+  const bikes = db.collection<BikeDocument>("bikes");
+  const objectId = new ObjectId(bikeId);
+
+  const owned = await bikes.findOne({ _id: objectId, userId: fromClerkId });
+  if (!owned) return null;
+
+  const result = await bikes.findOneAndUpdate(
+    { _id: objectId, userId: fromClerkId },
+    {
+      $set: {
+        userId: toClerkId,
+        updatedAt: new Date(),
+      },
+    },
+    { returnDocument: "after" },
+  );
+
+  if (!result) return null;
+
+  await removeBikeFromUser(fromClerkId, bikeId);
+  await addBikeToUser(toClerkId, bikeId);
 
   return {
     id: result._id.toString(),
