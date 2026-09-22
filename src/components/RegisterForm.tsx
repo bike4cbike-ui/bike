@@ -107,7 +107,7 @@ export default function RegisterForm() {
       setMessage("Bicycle registered successfully.");
       form.reset();
       clearImage();
-      router.push("/bikes");
+      router.push("/dashboard");
       router.refresh();
     } catch {
       setStatus("error");
