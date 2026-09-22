@@ -7,6 +7,7 @@ import {
   type CreateBikeInput,
 } from "@/lib/bikes";
 import { getDb } from "@/lib/mongodb";
+import { addBikeToUser } from "@/lib/users";
 
 function trimRequired(value: unknown, field: string): string {
   if (typeof value !== "string" || !value.trim()) {
@@ -17,6 +18,47 @@ function trimRequired(value: unknown, field: string): string {
 
 function trimOptional(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+export async function GET() {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json(
+      { error: "Sign in to view your bicycles." },
+      { status: 401 },
+    );
+  }
+
+  try {
+    const db = await getDb();
+    const bikes = await db
+      .collection<BikeDocument>("bikes")
+      .find({ userId })
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    return NextResponse.json(
+      bikes.map((bike) => ({
+        id: bike._id.toString(),
+        brand: bike.brand,
+        model: bike.model,
+        color: bike.color,
+        serialNumber: bike.serialNumber,
+        notes: bike.notes,
+        imageUrl: bike.imageUrl,
+        status: bike.status,
+        createdAt:
+          bike.createdAt instanceof Date
+            ? bike.createdAt.toISOString()
+            : bike.createdAt,
+      })),
+    );
+  } catch {
+    return NextResponse.json(
+      { error: "Could not load bicycles. Try again." },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(request: Request) {
@@ -85,6 +127,7 @@ export async function POST(request: Request) {
   try {
     const db = await getDb();
     const result = await db.collection<BikeDocument>("bikes").insertOne(bike);
+    await addBikeToUser(userId, result.insertedId);
 
     return NextResponse.json(
       {

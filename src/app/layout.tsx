@@ -1,6 +1,7 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import EnsureUser from "@/components/EnsureUser";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import "./globals.css";
@@ -31,9 +32,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col">
         <ClerkProvider>
+          <EnsureUser />
           <Header />
           <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
-          {children}
+            {children}
           </main>
           <Footer />
         </ClerkProvider>
