@@ -1,14 +1,17 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function RegisterForm() {
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [status, setStatus] = useState<"idle" | "uploading" | "done" | "error">(
-    "idle",
-  );
+  const [status, setStatus] = useState<
+    "idle" | "uploading" | "saving" | "done" | "error"
+  >("idle");
   const [message, setMessage] = useState<string | null>(null);
 
   function clearImage() {
@@ -38,17 +41,20 @@ export default function RegisterForm() {
     event.preventDefault();
     setMessage(null);
 
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
     let imageUrl: string | null = null;
 
     if (imageFile) {
       setStatus("uploading");
-      const body = new FormData();
-      body.append("file", imageFile);
+      const uploadBody = new FormData();
+      uploadBody.append("file", imageFile);
 
       try {
         const response = await fetch("/api/upload", {
           method: "POST",
-          body,
+          body: uploadBody,
         });
         const data = (await response.json()) as {
           url?: string;
@@ -69,17 +75,50 @@ export default function RegisterForm() {
       }
     }
 
-    // Bike fields are still UI-only until a register API exists.
-    setStatus("done");
-    setMessage(
-      imageUrl
-        ? `Image uploaded. Bike details are not saved to the database yet.\n${imageUrl}`
-        : "Form submitted. Bike details are not saved to the database yet.",
-    );
+    setStatus("saving");
+
+    try {
+      const response = await fetch("/api/bikes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brand: formData.get("brand"),
+          model: formData.get("model"),
+          color: formData.get("color"),
+          serialNumber: formData.get("serialNumber"),
+          notes: formData.get("notes"),
+          imageUrl,
+        }),
+      });
+
+      const data = (await response.json()) as {
+        id?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !data.id) {
+        setStatus("error");
+        setMessage(data.error ?? "Could not save bicycle.");
+        return;
+      }
+
+      setStatus("done");
+      setMessage("Bicycle registered successfully.");
+      form.reset();
+      clearImage();
+      router.push("/bikes");
+      router.refresh();
+    } catch {
+      setStatus("error");
+      setMessage("Could not save bicycle. Check your connection and try again.");
+    }
   }
+
+  const busy = status === "uploading" || status === "saving";
 
   return (
     <form
+      ref={formRef}
       onSubmit={onSubmit}
       className="max-w-xl space-y-5 rounded-lg border border-border bg-surface p-6"
     >
@@ -146,10 +185,14 @@ export default function RegisterForm() {
 
       <button
         type="submit"
-        disabled={status === "uploading"}
+        disabled={busy}
         className="rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
       >
-        {status === "uploading" ? "Uploading photo…" : "Submit registration"}
+        {status === "uploading"
+          ? "Uploading photo…"
+          : status === "saving"
+            ? "Saving…"
+            : "Submit registration"}
       </button>
 
       {message ? (
@@ -160,8 +203,8 @@ export default function RegisterForm() {
         </p>
       ) : (
         <p className="text-xs text-muted">
-          Photos upload to Cloudinary when you are signed in. Bike fields still
-          need a database save.
+          Registrations are saved to MongoDB. Photos upload to Cloudinary when
+          included.
         </p>
       )}
     </form>
