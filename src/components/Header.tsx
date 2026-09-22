@@ -1,3 +1,4 @@
+import { SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 
 const navLinks = [
@@ -26,6 +27,24 @@ export default function Header() {
               {link.label}
             </Link>
           ))}
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <button type="button" className="hover:text-foreground">
+                Sign in
+              </button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <button
+                type="button"
+                className="rounded-md bg-accent px-3 py-1.5 text-white hover:opacity-90"
+              >
+                Sign up
+              </button>
+            </SignUpButton>
+          </Show>
+          <Show when="signed-in">
+            <UserButton />
+          </Show>
         </nav>
       </div>
     </header>
