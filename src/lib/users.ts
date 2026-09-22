@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import type { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 
-export type UserRole = "user" | "admin" | "shop";
+export type UserRole = "USER" | "ADMIN";
 
 export type UserDocument = {
   userId: string;
@@ -47,7 +47,7 @@ export async function ensureUser(
   const doc: UserDocument = {
     userId: randomUUID(),
     clerkId: snapshot.clerkId,
-    role: "user",
+    role: "USER",
     bikes: [],
     shop: [],
     email: snapshot.email ?? null,
