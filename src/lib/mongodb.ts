@@ -1,7 +1,5 @@
 import { MongoClient, type Db } from "mongodb";
 
-const options = {};
-
 declare global {
   // eslint-disable-next-line no-var
   var _mongoClientPromise: Promise<MongoClient> | undefined;
@@ -13,12 +11,20 @@ function getClientPromise(): Promise<MongoClient> {
     throw new Error("Missing MONGODB_URI environment variable");
   }
 
-  if (process.env.NODE_ENV === "development") {
-    global._mongoClientPromise ??= new MongoClient(uri, options).connect();
-    return global._mongoClientPromise;
+  // Always reuse one client promise (important on Vercel warm instances).
+  // Short timeouts so a bad Atlas network config fails fast instead of
+  // hanging until Vercel shows "This page could not be served".
+  if (!global._mongoClientPromise) {
+    const client = new MongoClient(uri, {
+      serverSelectionTimeoutMS: 5_000,
+      connectTimeoutMS: 5_000,
+      socketTimeoutMS: 10_000,
+      maxPoolSize: 5,
+    });
+    global._mongoClientPromise = client.connect();
   }
 
-  return new MongoClient(uri, options).connect();
+  return global._mongoClientPromise;
 }
 
 export async function getDb(): Promise<Db> {

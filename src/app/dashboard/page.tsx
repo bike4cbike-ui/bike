@@ -14,36 +14,43 @@ export const metadata: Metadata = {
 export default async function DashboardPage() {
   const { userId } = await auth();
   let bikes: BikeListItem[] = [];
+  let loadError: string | null = null;
 
   if (userId) {
-    let user = await getUserByClerkId(userId);
+    try {
+      let user = await getUserByClerkId(userId);
 
-    if (!user) {
-      const clerkUser = await currentUser();
-      if (clerkUser) {
-        const email =
-          clerkUser.primaryEmailAddress?.emailAddress ??
-          clerkUser.emailAddresses[0]?.emailAddress ??
-          null;
-        const name =
-          [clerkUser.firstName, clerkUser.lastName]
-            .filter(Boolean)
-            .join(" ")
-            .trim() ||
-          clerkUser.username ||
-          null;
+      if (!user) {
+        const clerkUser = await currentUser();
+        if (clerkUser) {
+          const email =
+            clerkUser.primaryEmailAddress?.emailAddress ??
+            clerkUser.emailAddresses[0]?.emailAddress ??
+            null;
+          const name =
+            [clerkUser.firstName, clerkUser.lastName]
+              .filter(Boolean)
+              .join(" ")
+              .trim() ||
+            clerkUser.username ||
+            null;
 
-        user = await ensureUser({
-          clerkId: clerkUser.id,
-          email,
-          name,
-          imageUrl: clerkUser.imageUrl ?? null,
-        });
+          user = await ensureUser({
+            clerkId: clerkUser.id,
+            email,
+            name,
+            imageUrl: clerkUser.imageUrl ?? null,
+          });
+        }
       }
-    }
 
-    if (user) {
-      bikes = await getBikesByIds(user.bikes ?? []);
+      if (user) {
+        bikes = await getBikesByIds(user.bikes ?? []);
+      }
+    } catch (error) {
+      console.error("Dashboard MongoDB load failed:", error);
+      loadError =
+        "Could not reach the database. Check MONGODB_URI and Atlas Network Access (allow 0.0.0.0/0 for Vercel), then try again.";
     }
   }
 
@@ -75,6 +82,12 @@ export default async function DashboardPage() {
       </Show>
 
       <Show when="signed-in">
+        {loadError ? (
+          <div className="mb-6 rounded-lg border border-border bg-surface p-6 text-sm text-danger">
+            {loadError}
+          </div>
+        ) : null}
+
         <div className="mb-8 grid gap-4 sm:grid-cols-3">
           <Stat label="Registered" value={registered} />
           <Stat label="Pending" value={pending} />
@@ -93,7 +106,7 @@ export default async function DashboardPage() {
           </Link>
         </div>
 
-        {bikes.length === 0 ? (
+        {bikes.length === 0 && !loadError ? (
           <div className="rounded-lg border border-border bg-surface p-6 text-sm text-muted">
             No bikes in your account yet.{" "}
             <Link href="/register" className="text-accent hover:underline">
@@ -101,9 +114,11 @@ export default async function DashboardPage() {
             </Link>{" "}
             to see it here.
           </div>
-        ) : (
+        ) : null}
+
+        {bikes.length > 0 ? (
           <DashboardBikesTable initialBikes={bikes} />
-        )}
+        ) : null}
       </Show>
     </div>
   );

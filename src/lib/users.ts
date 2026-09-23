@@ -65,11 +65,15 @@ export function toPublicUser(user: UserDocument): PublicUser {
 
 export async function getUsersCollection() {
   const db = await getDb();
-  const users = db.collection<UserDocument>("users");
+  return db.collection<UserDocument>("users");
+}
+
+/** Run once during setup/deploy — not on every request. */
+export async function ensureUserIndexes() {
+  const users = await getUsersCollection();
   await users.createIndex({ clerkId: 1 }, { unique: true });
   await users.createIndex({ userId: 1 }, { unique: true });
   await users.createIndex({ email: 1 });
-  return users;
 }
 
 export async function getUserByClerkId(

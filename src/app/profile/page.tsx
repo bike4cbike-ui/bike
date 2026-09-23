@@ -8,6 +8,7 @@ import {
   ensureUser,
   getUserByClerkId,
   toPublicUser,
+  type PublicUser,
 } from "@/lib/users";
 
 export const metadata: Metadata = {
@@ -17,37 +18,44 @@ export const metadata: Metadata = {
 export default async function ProfilePage() {
   const { userId } = await auth();
 
-  let initialUser = null;
+  let initialUser: PublicUser | null = null;
+  let loadError: string | null = null;
 
   if (userId) {
-    let user = await getUserByClerkId(userId);
+    try {
+      let user = await getUserByClerkId(userId);
 
-    if (!user) {
-      const clerkUser = await currentUser();
-      if (clerkUser) {
-        const email =
-          clerkUser.primaryEmailAddress?.emailAddress ??
-          clerkUser.emailAddresses[0]?.emailAddress ??
-          null;
-        const name =
-          [clerkUser.firstName, clerkUser.lastName]
-            .filter(Boolean)
-            .join(" ")
-            .trim() ||
-          clerkUser.username ||
-          null;
+      if (!user) {
+        const clerkUser = await currentUser();
+        if (clerkUser) {
+          const email =
+            clerkUser.primaryEmailAddress?.emailAddress ??
+            clerkUser.emailAddresses[0]?.emailAddress ??
+            null;
+          const name =
+            [clerkUser.firstName, clerkUser.lastName]
+              .filter(Boolean)
+              .join(" ")
+              .trim() ||
+            clerkUser.username ||
+            null;
 
-        user = await ensureUser({
-          clerkId: clerkUser.id,
-          email,
-          name,
-          imageUrl: clerkUser.imageUrl ?? null,
-        });
+          user = await ensureUser({
+            clerkId: clerkUser.id,
+            email,
+            name,
+            imageUrl: clerkUser.imageUrl ?? null,
+          });
+        }
       }
-    }
 
-    if (user) {
-      initialUser = toPublicUser(user);
+      if (user) {
+        initialUser = toPublicUser(user);
+      }
+    } catch (error) {
+      console.error("Profile MongoDB load failed:", error);
+      loadError =
+        "Could not reach the database. Check MONGODB_URI and Atlas Network Access (allow 0.0.0.0/0 for Vercel), then try again.";
     }
   }
 
@@ -75,19 +83,27 @@ export default async function ProfilePage() {
       </Show>
 
       <Show when="signed-in">
-        {initialUser ? (
+        {loadError ? (
+          <div className="max-w-lg rounded-lg border border-border bg-surface p-6 text-sm text-danger">
+            {loadError}
+          </div>
+        ) : null}
+
+        {!loadError && initialUser ? (
           <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
             <ProfileForm initialUser={initialUser} />
             <CertificatePanel ownerName={initialUser.name} />
           </div>
-        ) : (
+        ) : null}
+
+        {!loadError && !initialUser ? (
           <div className="max-w-lg rounded-lg border border-border bg-surface p-6">
             <p className="text-sm text-muted">
               Could not load your profile from the database. Refresh the page or
               try signing in again.
             </p>
           </div>
-        )}
+        ) : null}
       </Show>
     </div>
   );
