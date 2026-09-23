@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function HomePage() {
   return (
     <div className="space-y-10">
-      {/* Video hero with overlay buttons */}
+      {/* Video hero — seamless under transparent header */}
       <section className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 -mt-10 overflow-hidden bg-[#121412]">
         <video
           className="absolute inset-0 h-full w-full object-cover"
@@ -14,37 +14,36 @@ export default function HomePage() {
           playsInline
           preload="metadata"
         />
-        {/* Stronger dark overlay for readable text/buttons */}
         <div
           aria-hidden
-          className="absolute inset-0 bg-linear-to-r from-black/75 via-black/45 to-black/25"
+          className="absolute inset-0 bg-linear-to-r from-black/70 via-black/40 to-black/15"
         />
 
-        <div className="relative z-10 mx-auto flex min-h-[calc(80dvh-5.5rem)] max-w-5xl flex-col justify-center px-6 py-24 sm:px-8">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/85 drop-shadow">
-            Campus bicycle registry
-          </p>
-          <h1 className="max-w-xl text-4xl font-bold tracking-tight text-white drop-shadow-md sm:text-5xl">
-            BikeReg
-          </h1>
-          <p className="mt-4 max-w-lg text-lg leading-relaxed text-white/90 drop-shadow">
-            A simple starter for registering and tracking campus bikes. Pages
-            and sample data are ready so your team can wire up auth, storage,
-            and styling later.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-4">
-            <Link
-              href="/register"
-              className="rounded-lg bg-accent px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-black/30 hover:bg-accent-hover"
-            >
-              Register a bike
-            </Link>
-            <Link
-              href="/dashboard"
-              className="rounded-lg border-2 border-white bg-white px-6 py-3.5 text-base font-semibold text-[#1a1f1c] shadow-lg shadow-black/25 hover:bg-[#f0f2ef]"
-            >
-              Open dashboard
-            </Link>
+        <div className="relative z-10 mx-auto flex min-h-[min(68vh,46rem)] max-w-6xl flex-col justify-center px-6 pb-16 pt-24 sm:min-h-[min(72vh,70rem)] sm:px-8 lg:pt-28">
+          <div className="max-w-3xl-">
+            <h1 className="text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.1] tracking-tight text-white drop-shadow-md">
+              Register your bike.
+              <br />
+              Ride with confidence.
+            </h1>
+            <p className="mt-5 max-w-md text-base leading-relaxed text-white/85 drop-shadow sm:text-lg">
+              Kickstart campus bike safety with registration, tracking, and a
+              clear ownership record — built for students and staff.
+            </p>
+            <div className="mt-9 flex flex-wrap gap-3">
+              <Link
+                href="/register"
+                className="rounded-full bg-accent px-7 py-3.5 text-base font-semibold text-white shadow-[0_10px_28px_rgba(47,107,79,0.45)] transition hover:bg-accent-hover"
+              >
+                Register a bike
+              </Link>
+              <Link
+                href="/dashboard"
+                className="rounded-full border-2 border-accent bg-accent-soft px-7 py-3.5 text-base font-semibold text-accent transition hover:bg-white"
+              >
+                Open dashboard
+              </Link>
+            </div>
           </div>
         </div>
       </section>
