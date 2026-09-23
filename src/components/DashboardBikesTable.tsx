@@ -88,7 +88,6 @@ export default function DashboardBikesTable({
               <th className="px-4 py-3 font-medium">Serial</th>
               <th className="px-4 py-3 font-medium">Registered</th>
               <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Certificate</th>
               <th className="px-4 py-3 font-medium">Actions</th>
             </tr>
           </thead>
@@ -109,15 +108,13 @@ export default function DashboardBikesTable({
                   <StatusBadge status={bike.status} />
                 </td>
                 <td className="px-4 py-3">
-                  <Link
-                    href={`/certificate/${bike.id}`}
-                    className="text-accent hover:underline"
-                  >
-                    View
-                  </Link>
-                </td>
-                <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-2">
+                    <Link
+                      href={`/certificate/${bike.id}`}
+                      className="rounded-md border border-accent px-2.5 py-1 text-xs font-medium text-accent hover:bg-accent-soft"
+                    >
+                      Certificate
+                    </Link>
                     <button
                       type="button"
                       onClick={() => openEdit(bike)}
